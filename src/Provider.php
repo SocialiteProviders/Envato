@@ -35,7 +35,7 @@ class Provider extends AbstractProvider implements ProviderInterface
             ],
         ]);
 
-        $response = json_decode($response->getBody(), true)['account'];
+        $response = json_decode($response->getBody()->getContents(), true)['account'];
         $response['email'] = $this->getEmailByToken($token);
         $response['username'] = $this->getUsernameByToken($token);
 
@@ -79,7 +79,7 @@ class Provider extends AbstractProvider implements ProviderInterface
             ],
         ]);
 
-        return json_decode($response->getBody(), true)['email'];
+        return json_decode($response->getBody()->getContents(), true)['email'];
     }
 
     /**
@@ -97,6 +97,6 @@ class Provider extends AbstractProvider implements ProviderInterface
             ],
         ]);
 
-        return json_decode($response->getBody(), true)['username'];
+        return json_decode($response->getBody()->getContents(), true)['username'];
     }
 }
