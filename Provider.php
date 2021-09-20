@@ -2,7 +2,6 @@
 
 namespace SocialiteProviders\Envato;
 
-use GuzzleHttp\RequestOptions;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
 
@@ -35,14 +34,15 @@ class Provider extends AbstractProvider
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get('https://api.envato.com/v1/market/private/user/account.json', [
-            RequestOptions::HEADERS => [
+            'headers' => [
                 'Authorization' => 'Bearer '.$token,
             ],
         ]);
 
-        $response = json_decode((string) $response->getBody(), true)['account'];
+        $response = json_decode($response->getBody()->getContents(), true)['account'];
         $response['email'] = $this->getEmailByToken($token);
         $response['username'] = $this->getUsernameByToken($token);
+        $response['userId'] = $this->getIdByToken($token);
 
         return $response;
     }
@@ -53,7 +53,7 @@ class Provider extends AbstractProvider
     protected function mapUserToObject(array $user)
     {
         return (new User())->setRaw($user)->map([
-            'id'    => null, 'nickname' => $user['username'],
+            'id'    => $user['userId'], 'nickname' => $user['username'],
             'name'  => $user['firstname'].' '.$user['surname'],
             'email' => $user['email'], 'avatar' => $user['image'],
         ]);
@@ -79,12 +79,12 @@ class Provider extends AbstractProvider
     protected function getEmailByToken($token)
     {
         $response = $this->getHttpClient()->get('https://api.envato.com/v1/market/private/user/email.json', [
-            RequestOptions::HEADERS => [
+            'headers' => [
                 'Authorization' => 'Bearer '.$token,
             ],
         ]);
 
-        return json_decode((string) $response->getBody(), true)['email'];
+        return json_decode($response->getBody()->getContents(), true)['email'];
     }
 
     /**
@@ -97,11 +97,29 @@ class Provider extends AbstractProvider
     protected function getUsernameByToken($token)
     {
         $response = $this->getHttpClient()->get('https://api.envato.com/v1/market/private/user/username.json', [
-            RequestOptions::HEADERS => [
+            'headers' => [
                 'Authorization' => 'Bearer '.$token,
             ],
         ]);
 
-        return json_decode((string) $response->getBody(), true)['username'];
+        return json_decode($response->getBody()->getContents(), true)['username'];
+    }
+
+    /**
+     *  Get the user id of the current user.
+     *
+     * @param string $token
+     *
+     * @return string
+     */
+    protected function getIdByToken($token)
+    {
+        $response = $this->getHttpClient()->get('https://api.envato.com/whoami', [
+            'headers' => [
+                'Authorization' => 'Bearer '.$token,
+            ],
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true)['userId'];
     }
 }
